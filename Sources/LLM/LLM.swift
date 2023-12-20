@@ -36,6 +36,7 @@ open class LLM {
         topK: Int32 = 40,
         topP: Float = 0.95,
         temp: Float = 0.8,
+        ngl: Int32  = 32,
         historyLimit: Int = 8,
         maxTokenCount: Int32 = 2048,
         preProcess: @escaping (_: String, _: [Chat]) -> String = { input, history in return input },
@@ -51,10 +52,12 @@ open class LLM {
         params.n_ctx = UInt32(maxTokenCount) + (maxTokenCount % 2 == 1 ? 1 : 2)
         params.n_batch = params.n_ctx
         params.n_threads = processorCount
+        params.n_gpu_layers = ngl
         params.n_threads_batch = processorCount
         self.topK = topK
         self.topP = topP
         self.temp = temp
+        self.ngl = ngl
         self.historyLimit = historyLimit
         self.model = model
         self.history = history
@@ -80,6 +83,7 @@ open class LLM {
         topK: Int32 = 40,
         topP: Float = 0.95,
         temp: Float = 0.8,
+        ngl: Int32  = 32,
         historyLimit: Int = 8,
         maxTokenCount: Int32 = 2048,
         preProcess: @escaping (_: String, _: [Chat]) -> String = { input, history in return input },
@@ -94,6 +98,7 @@ open class LLM {
             topK: topK,
             topP: topP,
             temp: temp,
+            ngl: ngl,
             historyLimit: historyLimit,
             maxTokenCount: maxTokenCount,
             preProcess: preProcess,
