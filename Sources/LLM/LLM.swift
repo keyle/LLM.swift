@@ -15,6 +15,7 @@ open class LLM {
     public var topK: Int32
     public var topP: Float
     public var temp: Float
+    public var ngl: Int32
     public var historyLimit: Int
     public var path: [CChar]
     
@@ -26,6 +27,7 @@ open class LLM {
     private let endString: ContiguousArray<CChar>?
     private let endStringCount: Int
     private var params: llama_context_params
+    private var mparams: llama_model_params
     private var isFull = false
     
     public init(
@@ -44,7 +46,10 @@ open class LLM {
         update: @MainActor @escaping (_: String) -> Void = { _ in }
     ) {
         self.path = path.cString(using: .utf8)!
-        let model = llama_load_model_from_file(self.path, llama_model_default_params())!
+        mparams = llama_model_default_params()
+        mparams.n_gpu_layers = ngl
+        self.ngl = ngl
+        let model = llama_load_model_from_file(self.path, mparams)!
         params = llama_context_default_params()
         let processorCount = UInt32(ProcessInfo().processorCount)
         self.maxTokenCount = Int(min(maxTokenCount, llama_n_ctx_train(model)))
@@ -52,12 +57,10 @@ open class LLM {
         params.n_ctx = UInt32(maxTokenCount) + (maxTokenCount % 2 == 1 ? 1 : 2)
         params.n_batch = params.n_ctx
         params.n_threads = processorCount
-        params.n_gpu_layers = ngl
         params.n_threads_batch = processorCount
         self.topK = topK
         self.topP = topP
         self.temp = temp
-        self.ngl = ngl
         self.historyLimit = historyLimit
         self.model = model
         self.history = history
